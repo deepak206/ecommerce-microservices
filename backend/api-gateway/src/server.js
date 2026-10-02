@@ -14,6 +14,9 @@ const USER_SERVICE_URL =
 const PRODUCT_SERVICE_URL =
   process.env.PRODUCT_SERVICE_URL || "http://product-service:3002";
 
+const ORDER_SERVICE_URL =
+  process.env.ORDER_SERVICE_URL || "http://order-service:3003";
+
 app.disable("x-powered-by");
 
 app.use(cors());
@@ -64,6 +67,27 @@ app.use(
   })
 );
 
+// Order Service
+app.use(
+  "/api/orders",
+  createProxyMiddleware({
+    target: ORDER_SERVICE_URL,
+    changeOrigin: true,
+
+    pathRewrite: {
+      "^/": "/api/orders/",
+    },
+
+    on: {
+      proxyReq: (_proxyReq, req) => {
+        console.log(
+          `Gateway: ${req.method} ${req.originalUrl} -> ${ORDER_SERVICE_URL}${req.url}`
+        );
+      },
+    },
+  })
+);
+
 app.use((req, res) => {
   res.status(404).json({
     message: "Route not found",
@@ -73,4 +97,6 @@ app.use((req, res) => {
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`API Gateway listening on port ${PORT}`);
   console.log(`User Service: ${USER_SERVICE_URL}`);
+  console.log(`Product Service: ${PRODUCT_SERVICE_URL}`);
+  console.log(`Order Service: ${ORDER_SERVICE_URL}`);
 });

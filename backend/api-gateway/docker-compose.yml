@@ -1,3 +1,4 @@
+# ADD API GATEWAY HERE
 api-gateway:
   build:
     context: ./backend/api-gateway
@@ -7,10 +8,13 @@ api-gateway:
     PORT: 3000
     USER_SERVICE_URL: http://user-service:3001
     PRODUCT_SERVICE_URL: http://product-service:3002
+    ORDER_SERVICE_URL: http://order-service:3003
   ports:
     - "127.0.0.1:3000:3000"
   depends_on:
     user-service:
       condition: service_started
     product-service:
+      condition: service_started
+    order-service:
       condition: service_started
