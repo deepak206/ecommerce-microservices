@@ -75,15 +75,18 @@ app.use(
   createProxyMiddleware({
     target: ORDER_SERVICE_URL,
     changeOrigin: true,
-
-    pathRewrite: {
-      "^/": "/api/orders/",
-    },
-
+    pathRewrite: { "^/": "/api/orders/" },
     on: {
-      proxyReq: (_proxyReq, req) => {
+      proxyReq: (proxyReq, req) => {
+        console.log("Authenticated user:", req.user);
+
+        if (req.user?.sub) {
+          proxyReq.setHeader("x-user-id", String(req.user.sub));
+        }
+
         console.log(
-          `Gateway: ${req.method} ${req.originalUrl} -> ${ORDER_SERVICE_URL}${req.url}`
+          "Forwarding x-user-id:",
+          req.user?.sub
         );
       },
     },

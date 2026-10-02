@@ -15,6 +15,12 @@ const router = Router();
   POST /api/orders
 */
 router.post("/", async (req, res, next) => {
+
+    console.log("========== ORDER REQUEST ==========");
+    console.log("Authorization:", req.headers.authorization);
+    console.log("x-user-id:", req.headers["x-user-id"]);
+    console.log("===================================");
+    
   try {
     const userId = req.headers["x-user-id"];
 
