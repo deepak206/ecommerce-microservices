@@ -109,6 +109,33 @@ services:
         condition: service_healthy
       product-service:
         condition: service_started
+  notification-service:
+    build:
+        context: ./backend/notification-service
+    restart: unless-stopped
+    environment:
+        NODE_ENV: development
+        PORT: 3004
+        RABBITMQ_URL: amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672
+    ports:
+        - "127.0.0.1:3004:3004"
+    depends_on:
+        rabbitmq:
+            condition: service_healthy
+
+  invoice-service:
+    build:
+        context: ./backend/invoice-service
+    restart: unless-stopped
+    environment:
+        NODE_ENV: development
+        PORT: 3005
+        RABBITMQ_URL: amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672
+    ports:
+        - "127.0.0.1:3005:3005"
+    depends_on:
+        rabbitmq:
+            condition: service_healthy
 
 volumes:
   mongodb_data:
