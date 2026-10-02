@@ -1,5 +1,5 @@
-
 services:
+
   mongodb:
     image: mongo:8
     restart: unless-stopped
@@ -56,6 +56,21 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+
+  # ADD API GATEWAY HERE
+  api-gateway:
+    build:
+      context: ./backend/api-gateway
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      USER_SERVICE_URL: http://user-service:3001
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      user-service:
+        condition: service_started
 
 volumes:
   mongodb_data:
