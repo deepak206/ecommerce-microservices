@@ -4,6 +4,10 @@ import crypto from "node:crypto";
 import Order from "../models/Order.js";
 import { publishEvent } from "../config/rabbitmq.js";
 
+
+const PRODUCT_SERVICE_URL =
+  process.env.PRODUCT_SERVICE_URL || "http://product-service:3002";
+
 const router = Router();
 
 /*
@@ -20,10 +24,7 @@ router.post("/", async (req, res, next) => {
       });
     }
 
-    const {
-      items,
-      shippingAddress,
-    } = req.body;
+    const { items, shippingAddress } = req.body;
 
     if (!Array.isArray(items) || items.length === 0) {
       return res.status(400).json({
@@ -37,7 +38,32 @@ router.post("/", async (req, res, next) => {
       });
     }
 
-    const normalizedItems = items.map((item) => ({
+    const reservationResponse = await fetch(
+      `${PRODUCT_SERVICE_URL}/api/products/reserve`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          items: items.map((item) => ({
+            productId: item.productId,
+            quantity: item.quantity,
+          })),
+        }),
+      }
+    );
+
+    const reservationData = await reservationResponse.json();
+
+    if (!reservationResponse.ok) {
+      return res.status(reservationResponse.status).json({
+        message:
+          reservationData.message || "Unable to reserve product stock",
+      });
+    }
+
+    const normalizedItems = reservationData.items.map((item) => ({
       productId: item.productId,
       name: item.name,
       quantity: item.quantity,

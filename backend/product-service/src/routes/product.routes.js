@@ -21,6 +21,72 @@ router.get("/", async (_req, res, next) => {
   }
 });
 
+// Reserve product stock
+router.post("/reserve", async (req, res, next) => {
+  try {
+    const { items } = req.body;
+
+    if (!Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({
+        message: "Items are required",
+      });
+    }
+
+    // Validate request
+    for (const item of items) {
+      if (
+        !item.productId ||
+        !Number.isInteger(item.quantity) ||
+        item.quantity < 1
+      ) {
+        return res.status(400).json({
+          message: "Invalid product reservation data",
+        });
+      }
+    }
+
+    const reservedItems = [];
+
+    for (const item of items) {
+      const product = await Product.findOneAndUpdate(
+        {
+          _id: item.productId,
+          isActive: true,
+          stock: { $gte: item.quantity },
+        },
+        {
+          $inc: {
+            stock: -item.quantity,
+          },
+        },
+        {
+          new: true,
+        }
+      );
+
+      if (!product) {
+        return res.status(409).json({
+          message: `Product ${item.productId} is unavailable or has insufficient stock`,
+        });
+      }
+
+      reservedItems.push({
+        productId: product._id,
+        name: product.name,
+        price: product.price,
+        quantity: item.quantity,
+      });
+    }
+
+    res.json({
+      message: "Stock reserved successfully",
+      items: reservedItems,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // Get product by ID
 router.get("/:id", async (req, res, next) => {
   try {

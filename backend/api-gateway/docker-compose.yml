@@ -1,4 +1,3 @@
-# ADD API GATEWAY HERE
 api-gateway:
   build:
     context: ./backend/api-gateway
@@ -9,6 +8,7 @@ api-gateway:
     USER_SERVICE_URL: http://user-service:3001
     PRODUCT_SERVICE_URL: http://product-service:3002
     ORDER_SERVICE_URL: http://order-service:3003
+    JWT_SECRET: ${JWT_SECRET}
   ports:
     - "127.0.0.1:3000:3000"
   depends_on:

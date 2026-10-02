@@ -3,6 +3,7 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import { createProxyMiddleware } from "http-proxy-middleware";
+import { authenticateRequest } from "./middleware/auth.js";
 
 const app = express();
 
@@ -70,6 +71,7 @@ app.use(
 // Order Service
 app.use(
   "/api/orders",
+  authenticateRequest,
   createProxyMiddleware({
     target: ORDER_SERVICE_URL,
     changeOrigin: true,

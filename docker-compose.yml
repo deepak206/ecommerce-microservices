@@ -60,23 +60,24 @@ services:
   # ADD API GATEWAY HERE
   api-gateway:
     build:
-      context: ./backend/api-gateway
+        context: ./backend/api-gateway
     restart: unless-stopped
     environment:
-      NODE_ENV: development
-      PORT: 3000
-      USER_SERVICE_URL: http://user-service:3001
-      PRODUCT_SERVICE_URL: http://product-service:3002
-      ORDER_SERVICE_URL: http://order-service:3003
+        NODE_ENV: development
+        PORT: 3000
+        USER_SERVICE_URL: http://user-service:3001
+        PRODUCT_SERVICE_URL: http://product-service:3002
+        ORDER_SERVICE_URL: http://order-service:3003
+        JWT_SECRET: ${JWT_SECRET}
     ports:
-      - "127.0.0.1:3000:3000"
+        - "127.0.0.1:3000:3000"
     depends_on:
-      user-service:
-        condition: service_started
-      product-service:
-        condition: service_started
-      order-service:
-        condition: service_started
+        user-service:
+            condition: service_started
+        product-service:
+            condition: service_started
+        order-service:
+            condition: service_started
   product-service:
     build:
       context: ./backend/product-service
@@ -106,6 +107,8 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+      product-service:
+        condition: service_started
 
 volumes:
   mongodb_data:

@@ -1,0 +1,10 @@
+order-service:
+  build:
+    context: ./backend/order-service
+  restart: unless-stopped
+  environment:
+    NODE_ENV: development
+    PORT: 3003
+    MONGODB_URI: mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@mongodb:27017/ecommerce_orders?authSource=admin
+    RABBITMQ_URL: amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672
+    PRODUCT_SERVICE_URL: http://product-service:3002
