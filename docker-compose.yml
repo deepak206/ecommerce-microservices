@@ -71,6 +71,21 @@ services:
     depends_on:
       user-service:
         condition: service_started
+      product-service:
+        condition: service_started
+  product-service:
+    build:
+      context: ./backend/product-service
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      PORT: 3002
+      MONGODB_URI: mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@mongodb:27017/ecommerce_products?authSource=admin
+    ports:
+      - "127.0.0.1:3002:3002"
+    depends_on:
+      mongodb:
+        condition: service_healthy
 
 volumes:
   mongodb_data:

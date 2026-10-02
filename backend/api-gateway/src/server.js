@@ -11,6 +11,9 @@ const PORT = Number(process.env.PORT || 3000);
 const USER_SERVICE_URL =
   process.env.USER_SERVICE_URL || "http://user-service:3001";
 
+const PRODUCT_SERVICE_URL =
+  process.env.PRODUCT_SERVICE_URL || "http://product-service:3002";
+
 app.disable("x-powered-by");
 
 app.use(cors());
@@ -30,6 +33,25 @@ app.use(
 
     pathRewrite: {
       "^/": "/api/users/",
+    },
+
+    on: {
+      proxyReq: (proxyReq, req) => {
+        console.log(
+          `Gateway: ${req.method} ${req.originalUrl} -> ${USER_SERVICE_URL}${req.url}`
+        );
+      },
+    },
+  })
+);
+
+app.use(
+  "/api/products",
+  createProxyMiddleware({
+    target: PRODUCT_SERVICE_URL,
+    changeOrigin: true,
+    pathRewrite: {
+      "^/": "/api/products/",
     },
 
     on: {
