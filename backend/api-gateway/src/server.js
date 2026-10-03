@@ -1,9 +1,14 @@
 import "dotenv/config";
-
+import cluster from "node:cluster";
 import express from "express";
 import cors from "cors";
 import { createProxyMiddleware } from "http-proxy-middleware";
 import { authenticateRequest } from "./middleware/auth.js";
+
+import {
+  apiRateLimiter,
+  authRateLimiter,
+} from "./middleware/rateLimiter.js";
 
 const app = express();
 
@@ -19,8 +24,9 @@ const ORDER_SERVICE_URL =
   process.env.ORDER_SERVICE_URL || "http://order-service:3003";
 
 app.disable("x-powered-by");
-
 app.use(cors());
+
+app.use(apiRateLimiter);
 
 app.get("/health", (_req, res) => {
   res.json({
@@ -28,6 +34,11 @@ app.get("/health", (_req, res) => {
     status: "ok",
   });
 });
+
+app.use(
+  "/api/users/login",
+  authRateLimiter
+);
 
 app.use(
   "/api/users",
@@ -100,8 +111,9 @@ app.use((req, res) => {
 });
 
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`API Gateway listening on port ${PORT}`);
-  console.log(`User Service: ${USER_SERVICE_URL}`);
-  console.log(`Product Service: ${PRODUCT_SERVICE_URL}`);
-  console.log(`Order Service: ${ORDER_SERVICE_URL}`);
+  console.log(
+    `API Gateway worker ${
+      cluster.worker?.id ?? "unknown"
+    } listening on port ${PORT} (PID ${process.pid})`
+  );
 });

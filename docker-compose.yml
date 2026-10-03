@@ -69,6 +69,7 @@ services:
         PRODUCT_SERVICE_URL: http://product-service:3002
         ORDER_SERVICE_URL: http://order-service:3003
         JWT_SECRET: ${JWT_SECRET}
+        WEB_CONCURRENCY: 2
     ports:
         - "127.0.0.1:3000:3000"
     depends_on:
