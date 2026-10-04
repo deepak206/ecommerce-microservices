@@ -4,6 +4,7 @@ import express from "express";
 import cors from "cors";
 
 import { connectRabbitMQ } from "./config/rabbitmq.js";
+import { connectKafka } from "./config/kafka.js";
 
 const app = express();
 
@@ -25,6 +26,7 @@ app.get("/health", (_req, res) => {
 async function startServer() {
   try {
     await connectRabbitMQ();
+    await connectKafka();
 
     app.listen(
       PORT,

@@ -6,6 +6,7 @@ import cors from "cors";
 import { connectDatabase } from "./config/database.js";
 import { connectRabbitMQ } from "./config/rabbitmq.js";
 import orderRoutes from "./routes/order.routes.js";
+import { connectKafka } from "./config/kafka.js";
 
 const app = express();
 
@@ -45,6 +46,8 @@ async function startServer() {
     await connectDatabase();
 
     await connectRabbitMQ();
+
+    await connectKafka();
 
     app.listen(PORT, "0.0.0.0", () => {
       console.log(`Order Service listening on port ${PORT}`);

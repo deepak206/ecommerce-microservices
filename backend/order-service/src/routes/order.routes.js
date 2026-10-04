@@ -3,6 +3,7 @@ import crypto from "node:crypto";
 
 import Order from "../models/Order.js";
 import { publishEvent } from "../config/rabbitmq.js";
+import { publishKafkaEvent } from "../config/kafka.js";
 
 
 const PRODUCT_SERVICE_URL =
@@ -89,21 +90,35 @@ router.post("/", async (req, res, next) => {
       status: "PENDING",
     });
 
+    const orderEvent = {
+      eventId: crypto.randomUUID(),
+      orderId: order._id.toString(),
+      userId: userId.toString(),
+      totalAmount: order.totalAmount,
+      items: order.items,
+      occurredAt: new Date().toISOString(),
+    };
+
+    // Publish to RabbitMQ
     try {
-      await publishEvent("order.created", {
-        eventId: crypto.randomUUID(),
-        orderId: order._id.toString(),
-        userId: userId.toString(),
-        totalAmount: order.totalAmount,
-        items: order.items,
-        occurredAt: new Date().toISOString(),
-      });
+      await publishEvent("order.created", orderEvent);
     } catch (eventError) {
       console.error(
-        "Failed to publish order.created:",
+        "Failed to publish order.created to RabbitMQ:",
         eventError.message
       );
     }
+
+    // Publish to Kafka independently
+    try {
+      await publishKafkaEvent("order.created", orderEvent);
+    } catch (eventError) {
+      console.error(
+        "Failed to publish order.created to Kafka:",
+        eventError.message
+      );
+    }
+
 
     res.status(201).json({
       message: "Order created successfully",
