@@ -1,5 +1,12 @@
 import jwt from "jsonwebtoken";
 
+/**
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ * @param {*} next 
+ * @returns 
+ */
 export function authenticateRequest(req, res, next) {
   const authorization = req.headers.authorization;
 
