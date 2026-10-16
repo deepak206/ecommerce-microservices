@@ -5,6 +5,11 @@ import cors from "cors";
 import { createProxyMiddleware } from "http-proxy-middleware";
 import { authenticateRequest } from "./middleware/auth.js";
 
+import fs from "fs";
+import path from "path";
+import crypto from "crypto";
+import v8 from "v8"; 
+
 import {
   apiRateLimiter,
   authRateLimiter,
@@ -25,11 +30,73 @@ const PRODUCT_SERVICE_URL =
 const ORDER_SERVICE_URL =
   process.env.ORDER_SERVICE_URL || "http://order-service:3003";
 
+const DIAGNOSTICS_TOKEN = process.env.DIAGNOSTICS_TOKEN || "random-key-for-diagnostics";
+const ENABLE_DIAGNOSTICS = process.env.ENABLE_DIAGNOSTICS || "true";
+
 app.disable("x-powered-by");
 app.use(cors());
 
 app.use(apiRateLimiter);
-app.use(profiler);
+//app.use(profiler);
+
+
+// Enable only when explicitly configured.
+app.post('/internal/heap-snapshot', (req, res) => {
+  console.log('asdsdsdsd ---------------', ENABLE_DIAGNOSTICS, DIAGNOSTICS_TOKEN, req.get('x-diagnostics-token'));
+  if (ENABLE_DIAGNOSTICS !== 'true') {
+    return res.sendStatus(404);
+  }
+
+  const expected = DIAGNOSTICS_TOKEN || '';
+  const supplied = req.get('x-diagnostics-token') || '';
+
+  if (
+    !expected ||
+    expected.length !== supplied.length ||
+    !crypto.timingSafeEqual(
+      Buffer.from(expected),
+      Buffer.from(supplied)
+    )
+  ) {
+    return res.sendStatus(403);
+  }
+
+  try {
+    const directory = path.resolve('./profiles');
+
+    fs.mkdirSync(directory, { recursive: true });
+
+    const filename = path.join(
+      directory,
+      `Heap-${Date.now()}-${process.pid}.heapsnapshot`
+    );
+
+
+    console.log("Current working directory:", process.cwd());
+    console.log("Snapshot directory:", directory);
+        // Synchronous and potentially expensive.
+        const snapshotPath = v8.writeHeapSnapshot(filename);
+
+    console.log("Snapshot created at:", snapshotPath);
+    console.log("File exists:", fs.existsSync(snapshotPath));
+    console.log(
+      "File size:",
+      fs.statSync(snapshotPath).size,
+      "bytes"
+    );
+
+    res.json({
+      message: "Heap snapshot created",
+      filename: path.basename(snapshotPath),
+      fullPath: snapshotPath,
+      sizeBytes: fs.statSync(snapshotPath).size,
+    })
+  } catch (error) {
+    console.error('Heap snapshot failed:', error.message);
+    res.status(500).json({ message: 'Snapshot failed' });
+  }
+});
+
 
 app.get("/health", (_req, res) => {
   res.json({

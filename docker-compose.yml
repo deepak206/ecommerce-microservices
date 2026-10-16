@@ -118,6 +118,8 @@ services:
             condition: service_started
         order-service:
             condition: service_started
+    volumes:
+      - ./api-gateway/profiles:/app/profiles
   product-service:
     build:
       context: ./backend/product-service
