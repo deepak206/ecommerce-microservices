@@ -10,6 +10,8 @@ import {
   authRateLimiter,
 } from "./middleware/rateLimiter.js";
 
+import profiler from "./middleware/profiler.js";
+
 const app = express();
 
 const PORT = Number(process.env.PORT || 3000);
@@ -27,6 +29,7 @@ app.disable("x-powered-by");
 app.use(cors());
 
 app.use(apiRateLimiter);
+app.use(profiler);
 
 app.get("/health", (_req, res) => {
   res.json({
